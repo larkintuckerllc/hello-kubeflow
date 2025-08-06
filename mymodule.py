@@ -1,2 +1,0 @@
-def beep():
-    return "Beep!"

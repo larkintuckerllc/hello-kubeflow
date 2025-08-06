@@ -1,7 +1,7 @@
 apiVersion: sparkoperator.k8s.io/v1beta2
 kind: SparkApplication
 metadata:
-  name: hello-spark
+  name: fare-prediction
   namespace: default
 spec:
   driver:
@@ -12,10 +12,8 @@ spec:
     cores: 1
     instances: 1
     memory: 512m
-  image: hello-spark:0.10.0
-  mainApplicationFile: local:///opt/spark/work-dir/hello.py
+  image: fare-prediction:0.1.0
+  mainApplicationFile: local:///opt/spark/work-dir/fare-prediction.py
   sparkVersion: 4.0.0
   type: Python
-  deps:
-    pyFiles:
-       - local:///opt/spark/work-dir/deps/cowsay-6.1-py3-none-any.whl
+  
