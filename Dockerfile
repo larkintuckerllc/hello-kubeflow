@@ -3,4 +3,4 @@ USER root
 COPY deps/ ./deps/
 COPY mymodule.py .
 COPY hello.py .
-# USER spark
+USER spark
