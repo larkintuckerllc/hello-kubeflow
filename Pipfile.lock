@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0467a47ac1fd558364c5de048c17f82dfd37d1bbbd0aaba430bec316a7a67168"
+            "sha256": "9ba7486230e4eb82877140a5aa7ae6766232f867b9d60b2545231607b2053973"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -38,14 +38,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==4.0.0"
-        },
-        "venv-pack": {
-            "hashes": [
-                "sha256:33bbed48728bd5d1fee0a89c3082702b5d100c8021b2da9ea384b23ac410d3cd",
-                "sha256:95c5a51b8e5576143843b7693e1ac275c627348477562669bcd250847fa08136"
-            ],
-            "index": "pypi",
-            "version": "==0.2.0"
         }
     },
     "develop": {}
