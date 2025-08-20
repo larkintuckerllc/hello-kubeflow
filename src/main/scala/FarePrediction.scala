@@ -19,7 +19,10 @@ object FarePrediction {
     ds = ds.withColumn("TRIP_MINUTES", ds("TRIP_SECONDS") / 60)
     ds = ds.withColumn("PARTITION", when(rand() < 0.6, lit("train")).otherwise(when(rand() < 0.5, lit("validation")).otherwise(lit("test"))))
     ds = ds.select("FARE", "TRIP_MILES", "TRIP_MINUTES", "PARTITION")
-    ds.show()
+    ds.write
+      .mode("overwrite")
+      .partitionBy("PARTITION")
+      .parquet("s3a://hello-kubeflow/model/")
     spark.stop()
   }
 }
