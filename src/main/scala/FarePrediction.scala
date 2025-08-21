@@ -15,7 +15,7 @@ object FarePrediction {
     var ds = spark.read
       .option("header", "true")
       .csv("s3a://hello-kubeflow/fare-prediction/chicago_taxi_train.csv")
-      .limit(1000) // TODO: REMOVE THIS WHEN RUNNING AS A SPARKAPPLICATION
+      // .limit(1000) // ADD THIS WHEN RUNNING LOCALLY
     ds = ds.withColumn("TRIP_MINUTES", ds("TRIP_SECONDS") / 60)
     ds = ds.withColumn("PARTITION", when(rand() < 0.6, lit("train")).otherwise(when(rand() < 0.5, lit("validation")).otherwise(lit("test"))))
     ds = ds.select("FARE", "TRIP_MILES", "TRIP_MINUTES", "PARTITION")

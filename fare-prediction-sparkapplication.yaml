@@ -26,7 +26,7 @@ spec:
       value: REPLACE_ME
     - name: AWS_SESSION_TOKEN
       value: REPLACE_ME
-  image: fare-prediction:0.4.0
+  image: fare-prediction:0.5.0
   mainClass: FarePrediction
   mainApplicationFile: local:///opt/spark/work-dir/target/scala-2.13/fare-prediction_2.13-0.1.0-SNAPSHOT.jar
   sparkVersion: 4.0.0
