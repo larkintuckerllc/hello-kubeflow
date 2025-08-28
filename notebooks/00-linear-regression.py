@@ -14,13 +14,12 @@
 # ---
 
 # %% [markdown]
-# # constants
+# # imports
 
 # %%
-BATCH_SIZE = 10
-CSV_FILE = '../data/mpg-pounds.csv'
-EPOCHS = 100
-LEARNING_RATE = 0.05
+import os
+
+from kubeflow.trainer import TrainerClient, CustomTrainer
 
 
 # %% [markdown]
@@ -30,13 +29,19 @@ LEARNING_RATE = 0.05
 def train_pytorch():
     import os
 
+    import pandas as pd
+    import s3fs # s3fs is implicitly used by pandas for s3 paths
     import torch
     from torch import nn
     import torch.distributed as dist
     from torch.utils.data import DataLoader, DistributedSampler
-    import pandas as pd
     from torch.utils.data import Dataset
 
+    BATCH_SIZE = 10
+    BUCKET_NAME = "hello-kubeflow"
+    EPOCHS = 100
+    LEARNING_RATE = 0.05
+    OBJECT_PATH = "linear-regression/mpg-pounds.csv"
 
     device, backend = ("cuda", "nccl") if torch.cuda.is_available() else ("cpu", "gloo")
     dist.init_process_group(backend=backend)
@@ -64,8 +69,8 @@ def train_pytorch():
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 
     class CustomDataset(Dataset):
-        def __init__(self, csv_file):
-            df = pd.read_csv(csv_file)
+        def __init__(self, bucket_name, object_path):
+            df = pd.read_csv(f"s3://{bucket_name}/{object_path}")
             self.pounds = torch.tensor(df["pounds"].values, dtype=torch.float32)
             self.mpg = torch.tensor(df["mpg"].values, dtype=torch.float32)
             
@@ -75,7 +80,7 @@ def train_pytorch():
         def __getitem__(self, idx):
             return self.pounds[idx].view(-1, 1), self.mpg[idx].view(-1, 1)
     
-    dataset = CustomDataset(CSV_FILE)
+    dataset = CustomDataset(BUCKET_NAME, OBJECT_PATH)
     dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=DistributedSampler(dataset))
     for epoch in range(EPOCHS):
         for batch_idx, (batch_pounds, batch_mpg) in enumerate(dataloader):
@@ -100,22 +105,31 @@ def train_pytorch():
         print("Training is finished")
     dist.destroy_process_group()
 
+
 # %% [markdown]
-# # TODO
+# # Validate Runtime
 
 # %%
-from kubeflow.trainer import TrainerClient, CustomTrainer
 for r in TrainerClient().list_runtimes():
     print(f"Runtime: {r.name}")
 
 # %% [markdown]
-# # TODO
+# # Create Training Job
 
 # %%
 job_id = TrainerClient().train(
     trainer=CustomTrainer(
+        env={
+            "AWS_ACCESS_KEY_ID": os.getenv("AWS_ACCESS_KEY_ID"),
+            "AWS_SECRET_ACCESS_KEY": os.getenv("AWS_SECRET_ACCESS_KEY"),
+            "AWS_SESSION_TOKEN": os.getenv("AWS_SESSION_TOKEN"),
+        },
         func=train_pytorch,
         num_nodes=2,
+        packages_to_install=[
+            "s3fs==2025.7.0",
+            "pandas==2.3.2",
+        ],
         resources_per_node={
             "cpu": 5,
             "memory": "4Gi",
