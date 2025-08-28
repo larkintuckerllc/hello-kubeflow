@@ -83,23 +83,18 @@ def train_pytorch():
     dataset = CustomDataset(BUCKET_NAME, OBJECT_PATH)
     dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, sampler=DistributedSampler(dataset))
     for epoch in range(EPOCHS):
-        for batch_idx, (batch_pounds, batch_mpg) in enumerate(dataloader):
+        total_loss = 0
+        for batch_pounds, batch_mpg in dataloader:
             batch_pounds, batch_mpg = batch_pounds.to(device), batch_mpg.to(device)
             pred_mpg = model(batch_pounds)
             loss = loss_fn(pred_mpg, batch_mpg)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            if batch_idx % 10 == 0 and dist.get_rank() == 0:
-                print(
-                    "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                        epoch,
-                        batch_idx * len(batch_pounds),
-                        len(dataloader.dataset),
-                        100.0 * batch_idx / len(dataloader),
-                        loss.item(),
-                    )
-                ) 
+            total_loss += loss.item()
+        if (epoch + 1) % 10 == 0 and dist.get_rank() == 0:
+            avg_loss = total_loss / len(dataloader)
+            print(f'Epoch [{epoch+1}/{EPOCHS}], Average Loss: {avg_loss:.4f}')
     dist.barrier()
     if dist.get_rank() == 0:
         print("Training is finished")
@@ -138,3 +133,18 @@ job_id = TrainerClient().train(
     ),
     runtime=TrainerClient().get_runtime("torch-distributed"),
 )
+
+# %% [markdown]
+# # TODO
+
+# %%
+for s in TrainerClient().get_job(name=job_id).steps:
+    print(f"Step: {s.name}, Status: {s.status}, Devices: {s.device} x {s.device_count}")
+
+
+# %% [markdown]
+# # TODO
+
+# %%
+logs = TrainerClient().get_job_logs(name=job_id)
+print(logs["node-0"])
