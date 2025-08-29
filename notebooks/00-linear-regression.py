@@ -94,6 +94,13 @@ def train_pytorch():
     dist.barrier()
     if rank == 0:
         print("Training is finished")
+        model.eval()
+        dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
+        with torch.no_grad():
+            for batch_pounds, batch_mpg in dataloader:
+                pred_mpg = model(batch_pounds)
+                loss = loss_fn(pred_mpg, batch_mpg)
+                print(f'Final Loss: {loss.item():.4f}')    
     dist.destroy_process_group()
 
 # %% [markdown]
