@@ -78,7 +78,6 @@ def train_pytorch():
     model = nn.parallel.DistributedDataParallel(NeuralNetwork().to(device))
     loss_fn = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
     for epoch in range(EPOCHS):
         total_loss = 0
         for batch_pounds, batch_mpg in dataloader:
