@@ -41,6 +41,7 @@ def train_pytorch():
     BUCKET_NAME = "hello-kubeflow"
     EPOCHS = 100
     LEARNING_RATE = 0.05
+    MODEL_PATH = "linear-regression-model.pth"
     OBJECT_PATH = "linear-regression/mpg-pounds.csv"
 
     device, backend = ("cuda", "nccl") if torch.cuda.is_available() else ("cpu", "gloo")
@@ -100,7 +101,11 @@ def train_pytorch():
             for batch_pounds, batch_mpg in dataloader:
                 pred_mpg = model(batch_pounds)
                 loss = loss_fn(pred_mpg, batch_mpg)
-                print(f'Final Loss: {loss.item():.4f}')    
+                print(f'Final Loss: {loss.item():.4f}')
+        fs = s3fs.S3FileSystem()
+        with fs.open(f"s3://{BUCKET_NAME}/{MODEL_PATH}", 'wb') as f:
+            torch.save(model.module.state_dict(), f)
+        print(f"Model saved successfully to s3://{BUCKET_NAME}/{MODEL_PATH}") 
     dist.destroy_process_group()
 
 # %% [markdown]
